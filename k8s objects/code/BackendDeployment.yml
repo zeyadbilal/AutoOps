@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: hotel-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+
+      # 🔹 initContainer يستنى MySQL
+      initContainers:
+      - name: wait-for-mysql
+        image: busybox
+        command:
+        - sh
+        - -c
+        - |
+          until nc -z mysql-service 3306; do
+            echo "Waiting for MySQL to be ready...";
+            sleep 5;
+          done
+          echo "MySQL is ready!"
+
+      containers:
+      - name: backend
+        image: abdel3ziz/simple-backend:1
+        ports:
+        - containerPort: 8080
+
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: DB_HOST
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: DB_USER
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: backend-config
+              key: DB_NAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: DB_PASSWORD
+
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+
+      tolerations:
+      - key: "type"
+        operator: "Equal"
+        value: "db-backend"
+        effect: "NoSchedule"
+
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-type"
+                operator: In
+                values:
+                - backend-db

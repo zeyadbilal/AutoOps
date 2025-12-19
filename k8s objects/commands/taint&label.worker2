@@ -1,0 +1,2 @@
+kubectl taint nodes desktop-control-plane type=db-backend:NoSchedule
+kubectl label nodes desktop-control-plane node-type=backend-db

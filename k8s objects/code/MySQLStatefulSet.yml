@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  namespace: hotel-app
+spec:
+  serviceName: "mysql-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: mysql-init-script
+          mountPath: /docker-entrypoint-initdb.d
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: DB_PASSWORD
+        - name: MYSQL_DATABASE
+          value: "hotel_db"
+        - name: MYSQL_USER
+          value: "hotel"
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: DB_PASSWORD
+      volumes:
+      - name: mysql-init-script
+        configMap:
+          name: mysql-init-script
+      - name: mysql-storage
+        persistentVolumeClaim:
+          claimName: mysql-pvc
+      tolerations:
+      - key: "type"
+        operator: "Equal"
+        value: "db-backend"
+        effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-type"
+                operator: In
+                values:
+                - backend-db

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: hotel-app
+data:
+  DB_HOST: "mysql-service"
+  DB_USER: "hotel"
+  DB_NAME: "hotel_db"

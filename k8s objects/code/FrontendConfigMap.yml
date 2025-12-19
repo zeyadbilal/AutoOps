@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+  namespace: hotel-app
+data:
+  BACKEND_URL: "http://backend-service:8080"
+  API_BASE_URL: "http://backend-service:8080/api"
+  APP_NAME: "Hotel Management System"
+  ENVIRONMENT: "production"
