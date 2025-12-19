@@ -1,0 +1,28 @@
+# Custom Dockerfile for SQL Server with automatic database initialization
+FROM mcr.microsoft.com/mssql/server:2022-latest
+
+# Install necessary tools and mssql-tools18 (which includes sqlcmd)
+USER root
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        apt-transport-https \
+        curl \
+        gnupg \
+        locales-all \
+        netcat-traditional && \
+    curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - && \
+    # Use Ubuntu 22.04 (Jammy) for the Microsoft repository
+    wget -qO- https://packages.microsoft.com/config/ubuntu/22.04/prod.list | tee /etc/apt/sources.list.d/mssql-release.list && \
+    apt-get update && \
+    ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy the full_init.sql script
+COPY ["Database Tables/full_init.sql", "/docker-entrypoint-initdb.d/full_init.sql"]
+
+# Copy our custom entrypoint script and make it executable
+COPY entrypoint.sh /usr/src/app/entrypoint.sh
+RUN chmod +x /usr/src/app/entrypoint.sh
+
+# Set our custom script as the ENTRYPOINT
+ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
