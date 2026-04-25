@@ -35,7 +35,7 @@ All workloads are deployed in a dedicated `hotel-app` namespace.
 
 ## 🏗️ Architecture
 
-![Cluster Diagram](Cluster%20diagram%20(1).png)
+![Cluster Diagram](k8s%20objects/Cluster%20diagram%20(1).png)
 
 ### Cluster Layout
 
